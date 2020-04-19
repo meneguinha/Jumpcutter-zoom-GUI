@@ -6,6 +6,5 @@ pytube
 easygui
 tkinter
 
-
 pip install Pillow audiotsm scipy numpy pytube3 easygui
 tkinter (should be preinstalled)
