@@ -12,6 +12,8 @@ import os
 import argparse
 from pytube import YouTube
 
+print('Minimize this console and navigate through the GUI.\n\nOnce you begin exporting, you can use this console to view the progress of the exporting.')
+
 def downloadFile(url):
     name = YouTube(url).streams.first().download()
     newname = name.replace(' ','_')
@@ -34,8 +36,9 @@ def copyFrame(inputFrame,outputFrame):
     return True
 
 def inputToOutputFilename(filename):
+    from random import randrange
     dotIndex = filename.rfind(".")
-    return filename[:dotIndex]+"_ALTERED"+filename[dotIndex:]
+    return filename[:dotIndex]+f"_ALTERED-{randrange(10)}{randrange(10)}{randrange(10)}{randrange(10)}{randrange(10)}"+filename[dotIndex:]
 
 def createPath(s):
     #assert (not os.path.exists(s)), "The filepath "+s+" already exists. Don't want to overwrite it. Aborting."
@@ -43,7 +46,12 @@ def createPath(s):
     try:  
         os.mkdir(s)
     except OSError:  
-        assert False, "Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, and try again.)"
+        print("Creation of the directory %s failed. (The TEMP folder may already exist. Delete or rename it, and try again.")
+        tkadddata('Deleting old temp files...')
+        deletePath(TEMP_FOLDER)
+        createPath(TEMP_FOLDER)
+        #messagebox.showerror("Error", "It looks like the program previously crashed. Try restarting the program and try again.")
+        #sys.exit(1)
 
 def deletePath(s): # Dangerous! Watch out!
     try:  
@@ -64,8 +72,8 @@ root = tk.Tk()
 varAsTxt = tk.StringVar()
 os.system('title Jumpcutter Console - Do not close.')
 root.title('Jumpcutter GUI')
-root.maxsize(350,610)
-root.minsize(350,610)
+root.maxsize(350,570)
+root.minsize(350,570)
 root.resizable(False, False)
 root.attributes('-alpha', 0.9)
 
@@ -91,8 +99,9 @@ args_frame_rate = 30
 args_frame_quality = 3
 args_silent_threashold = 0.03
 args_sample_rate = 44100
+exportcolumn = 2
 
-def globalize(): global args_sounded_speed, args_silent_speed, args_output_file, args_input_file, args_url, args_frame_margin, args_frame_rate, args_frame_quality, args_silent_threashold, args_sample_rate
+def globalize(): global exportcolumn, args_sounded_speed, args_silent_speed, args_output_file, args_input_file, args_url, args_frame_margin, args_frame_rate, args_frame_quality, args_silent_threashold, args_sample_rate
 globalize()
 
 
@@ -171,7 +180,7 @@ tk.Label(root, text='Options', background="#f0f0f0", fg="black", font=("Arial", 
 # TOGGLE START
 def setstart():
     global args_output_file, args_input_file
-    args_output_file = tk_outputfile.get("1.0",'end-1c')
+    #args_output_file = tk_outputfile.get("1.0",'end-1c')
     if args_input_file is None and args_url is None: messagebox.showerror("Error", "Please select an a File/URL to export.")
     else: root.destroy()
     #root.destroy()
@@ -181,10 +190,11 @@ tk_start.grid(columnspan = 2, row = 150)
 
 # OUTPUT FILE NAME
 
+'''
 tk.Label(root, text='Output Name   \n(Optional)', background="#f0f0f0", justify='left', fg="black", font=("Arial", 10)).grid(row=10,column=0)
 tk_outputfile = tk.Text(root, height=1, width=25)
 tk_outputfile.grid(row=10,column=1,pady='10')
-
+'''
 
 # SOUNDED SPEED
 def setsoundspeed(x):
@@ -340,14 +350,32 @@ args_frame_quality = int(args_frame_quality)
 ###############
 
 root = tk.Tk()
-root.withdraw()
+root.title('Jumpcutter GUI - Exporting...')
+root.maxsize(350,510)
+root.minsize(350,510)
+root.resizable(False, False)
+root.attributes('-alpha', 0.9)
+root.config(background="#f0f0f0")
+def on_closing():
+    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+        sys.exit()
+root.protocol("WM_DELETE_WINDOW", on_closing)
 
-if args_input_file is not None:
-    if ' ' in args_input_file:
-        messagebox.showerror("Error", "Process has ended because there is a \' \' character in the path, and that breaks this program. Please move the file to a folder without a SPACE character and try again.")
-        sys.exit(1)
-    else: messagebox.showinfo("Exporting...", "Your video is now processing. You can check the console for more details. Please click \"OK\" to begin exporting.")
-else: messagebox.showinfo("Exporting...", "Your video is now processing. You can check the console for more details. Please click \"OK\" to begin exporting.")
+tk.Label(root, text='Exporting...', background="#f0f0f0", fg="black", font=("Arial Bold...", 20)).pack()
+tk.Label(root, text='(Don\'t try to close out!)', background="#f0f0f0", fg="black", font=("Arial Bold", 10)).pack(side='top')
+
+tk.PanedWindow(root, orient="horizontal", width=300, background="#000000", height=2).pack(pady=10)
+tk.Label(root, text='© Original by carykh  -  GUI by BatchSource', background="#f0f0f0", justify='left', fg="#787878", font=("Arial Bold", 10)).pack(side='bottom')
+
+
+def tkadddata(x):
+    global exportcolumn
+    exportcolumn+=1
+    tk.Label(root, text=x, background="#f0f0f0", fg="black", font=("Arial", 10)).pack(side='top', anchor='w', padx='20')
+    root.update()
+root.update()
+
+tkadddata('Setting variables...')
 
 frameRate = args_frame_rate
 SAMPLE_RATE = args_sample_rate
@@ -373,27 +401,39 @@ AUDIO_FADE_ENVELOPE_SIZE = 400 # smooth out transitiion's audio by quickly fadin
     
 createPath(TEMP_FOLDER)
 
+tkadddata('Extracting frames... (may take a while)')
+
 command = "ffmpeg -i "+INPUT_FILE+" -qscale:v "+str(FRAME_QUALITY)+" "+TEMP_FOLDER+"/frame%06d.jpg -hide_banner"
 subprocess.call(command, shell=True)
+
+tkadddata('Extracting audio...')
 
 command = "ffmpeg -i "+INPUT_FILE+" -ab 160k -ac 2 -ar "+str(SAMPLE_RATE)+" -vn "+TEMP_FOLDER+"/audio.wav"
 
 subprocess.call(command, shell=True)
+
+tkadddata('Setting parameters...')
 
 command = "ffmpeg -i "+TEMP_FOLDER+"/input.mp4 2>&1"
 f = open(TEMP_FOLDER+"/params.txt", "w")
 subprocess.call(command, shell=True, stdout=f)
 
 
+tkadddata('Getting audio data...')
 
 sampleRate, audioData = wavfile.read(TEMP_FOLDER+"/audio.wav")
 audioSampleCount = audioData.shape[0]
 maxAudioVolume = getMaxVolume(audioData)
 
+tkadddata('Reading parameters...')
+
 f = open(TEMP_FOLDER+"/params.txt", 'r+')
 pre_params = f.read()
 f.close()
 params = pre_params.split('\n')
+
+tkadddata('Calculating frame/sample rates...')
+
 for line in params:
     m = re.search('Stream #.*Video.* ([0-9]*) fps',line)
     if m is not None:
@@ -405,7 +445,7 @@ audioFrameCount = int(math.ceil(audioSampleCount/samplesPerFrame))
 
 hasLoudAudio = np.zeros((audioFrameCount))
 
-
+tkadddata(f'Looking for audio chucks louder than {args_silent_threashold}...')
 
 for i in range(audioFrameCount):
     start = int(i*samplesPerFrame)
@@ -414,6 +454,8 @@ for i in range(audioFrameCount):
     maxchunksVolume = float(getMaxVolume(audiochunks))/maxAudioVolume
     if maxchunksVolume >= SILENT_THRESHOLD:
         hasLoudAudio[i] = 1
+
+tkadddata(f'Adding a frame margin of \"{args_frame_margin}\"...')
 
 chunks = [[0,0,0]]
 shouldIncludeFrame = np.zeros((audioFrameCount))
@@ -429,6 +471,8 @@ chunks = chunks[1:]
 
 outputAudioData = np.zeros((0,audioData.shape[1]))
 outputPointer = 0
+
+tkadddata('Altering audio and saving new time-altered frames...')
 
 lastExistingFrame = None
 for chunk in chunks:
@@ -449,7 +493,6 @@ for chunk in chunks:
     #outputAudioData[outputPointer:endPointer] = alteredAudioData/maxAudioVolume
 
     # smooth out transitiion's audio by quickly fading in/out
-    
     if leng < AUDIO_FADE_ENVELOPE_SIZE:
         outputAudioData[outputPointer:endPointer] = 0 # audio is less than 0.01 sec, let's just remove it.
     else:
@@ -469,7 +512,7 @@ for chunk in chunks:
             copyFrame(lastExistingFrame,outputFrame)
 
     outputPointer = endPointer
-
+tkadddata('Saving new time-altered audio...')
 wavfile.write(TEMP_FOLDER+"/audioNew.wav",SAMPLE_RATE,outputAudioData)
 
 '''
@@ -477,10 +520,12 @@ outputFrame = math.ceil(outputPointer/samplesPerFrame)
 for endGap in range(outputFrame,audioFrameCount):
     copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
 '''
+tkadddata('Building final video... (may take a while)')
 
 command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 "+OUTPUT_FILE
 subprocess.call(command, shell=True)
 
+tkadddata('Cleaning up temp files...')
 deletePath(TEMP_FOLDER)
 
-messagebox.showinfo("Complete", "The process is complete.")
+messagebox.showinfo("Complete", f"The process is complete. File name: {OUTPUT_FILE}")
