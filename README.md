@@ -1,4 +1,4 @@
-# jumpcutter
+# Jumpcutter GUI
 Automatically edits videos. Explanation here: https://www.youtube.com/watch?v=DQ8orIurGxw
 
 ## Some heads-up:
@@ -16,6 +16,3 @@ I have processed 17-minute videos completely fine, but be wary if you're gonna g
 I want to use pyinstaller to turn this into an executable, so non-techy people
 can use it EVEN IF they don't have Python and all those libraries. Jabrils 
 recommended this to me. However, my pyinstaller build did not work. :( HELP
-
-## Building with nix
-`nix-build` to get a script with all the libraries and ffmpeg, `nix-build -A bundle` to get a single binary.
