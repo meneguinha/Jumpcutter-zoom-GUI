@@ -52,38 +52,319 @@ def deletePath(s): # Dangerous! Watch out!
         print ("Deletion of the directory %s failed" % s)
         print(OSError)
 
-parser = argparse.ArgumentParser(description='Modifies a video file to play at different speeds when there is sound vs. silence.')
-parser.add_argument('--input_file', type=str,  help='the video file you want modified')
-parser.add_argument('--url', type=str, help='A youtube url to download and process')
-parser.add_argument('--output_file', type=str, default="", help="the output file. (optional. if not included, it'll just modify the input file name)")
-parser.add_argument('--silent_threshold', type=float, default=0.03, help="the volume amount that frames' audio needs to surpass to be consider \"sounded\". It ranges from 0 (silence) to 1 (max volume)")
-parser.add_argument('--sounded_speed', type=float, default=1.00, help="the speed that sounded (spoken) frames should be played at. Typically 1.")
-parser.add_argument('--silent_speed', type=float, default=5.00, help="the speed that silent frames should be played at. 999999 for jumpcutting.")
-parser.add_argument('--frame_margin', type=float, default=1, help="some silent frames adjacent to sounded frames are included to provide context. How many frames on either the side of speech should be included? That's this variable.")
-parser.add_argument('--sample_rate', type=float, default=44100, help="sample rate of the input and output videos")
-parser.add_argument('--frame_rate', type=float, default=30, help="frame rate of the input and output videos. optional... I try to find it out myself, but it doesn't always work.")
-parser.add_argument('--frame_quality', type=int, default=3, help="quality of frames to be extracted from input video. 1 is highest, 31 is lowest, 3 is the default.")
-
-args = parser.parse_args()
+###############
 
 
+import tkinter as tk
+import easygui as e
+from tkinter.filedialog import askopenfilename
 
-frameRate = args.frame_rate
-SAMPLE_RATE = args.sample_rate
-SILENT_THRESHOLD = args.silent_threshold
-FRAME_SPREADAGE = args.frame_margin
-NEW_SPEED = [args.silent_speed, args.sounded_speed]
-if args.url != None:
-    INPUT_FILE = downloadFile(args.url)
+
+root = tk.Tk()
+varAsTxt = tk.StringVar()
+os.system('title Jumpcutter Console - Do not close.')
+root.title('Jumpcutter GUI')
+root.maxsize(350,610)
+root.minsize(350,610)
+root.resizable(False, False)
+root.attributes('-alpha', 0.9)
+
+root.config(background="#f0f0f0")
+
+from tkinter import messagebox
+import sys
+
+def on_closing():
+    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+        sys.exit()
+
+root.protocol("WM_DELETE_WINDOW", on_closing)
+
+# GLOBALS
+args_sounded_speed = 1.0
+args_silent_speed = 0.0
+args_output_file = ''
+args_input_file = None
+args_url = None
+args_frame_margin = 2
+args_frame_rate = 30
+args_frame_quality = 3
+args_silent_threashold = 0.03
+args_sample_rate = 44100
+
+def globalize(): global args_sounded_speed, args_silent_speed, args_output_file, args_input_file, args_url, args_frame_margin, args_frame_rate, args_frame_quality, args_silent_threashold, args_sample_rate
+globalize()
+
+
+tk.Label(root, text='Jumpcutter', background="#f0f0f0", fg="black", font=("Arial Bold", 20)).grid(row=0,columnspan=2, pady=10)
+
+
+tk.Label(root, text='Input File  ', background="#f0f0f0", fg="black", font=("Arial", 14)).grid(row=2,rowspan=2,column=0)
+
+
+def setfile():
+    def filereset():
+        args_input_file = None
+        filename_label.grid_forget()
+        tk_filereset.grid_forget()
+        tk_file = tk.Button(root, text='Choose File', background='#FFFFFF', width='20', fg='#000000', command=setfile)
+        tk_file.grid(column = 1, row = 2)
+
+        tk_fileyt = tk.Button(root, text='YouTube URL', background='#FFFFFF', width='20', fg='#000000', command=setyt)
+        tk_fileyt.grid(column = 1, row = 3)
+
+    global args_input_file
+    args_input_file = askopenfilename()
+    if args_input_file != "" and args_input_file is not None:
+        if ' ' in args_input_file:
+            args_input_file = None
+            messagebox.showerror("Error", "There is a SPACE (\' \') character in the folder path to this file, and that breaks this program. Please move the file to a folder without a SPACE character and try again.")
+        else:
+            tk_file.grid_forget()
+            tk_fileyt.grid_forget()
+            args_input_file_view = ''
+            for i in str(args_input_file)[::-1]:
+                if i == '\\' or i == '/': break
+                else: args_input_file_view+=i
+            args_input_file_view = args_input_file_view[::-1]
+
+            filename_label = tk.Label(root, text=args_input_file_view, width='25', background="#f0f0f0", fg="black", font=("Arial", 10))
+            filename_label.grid(row=2,column=1)
+
+            tk_filereset = tk.Button(root, text='Reset', background='#FFFFFF', width='20', fg='#000000', command=filereset)
+            tk_filereset.grid(column = 1, row = 3)
+
+def setyt():
+    def filereset2():
+        args_url = None
+        filename_label.grid_forget()
+        tk_filereset.grid_forget()
+        tk_file = tk.Button(root, text='Choose File', background='#FFFFFF', width='20', fg='#000000', command=setfile)
+        tk_file.grid(column = 1, row = 2)
+
+        tk_fileyt = tk.Button(root, text='YouTube URL', background='#FFFFFF', width='20', fg='#000000', command=setyt)
+        tk_fileyt.grid(column = 1, row = 3)
+
+    global args_url
+    args_url = e.enterbox('Please Paste the YouTube Link:', 'YouTube Link')
+
+    if args_url is not None and args_url != '':
+        tk_file.grid_forget()
+        tk_fileyt.grid_forget()
+        filename_label = tk.Label(root, text=args_url, width='25', background="#f0f0f0", fg="black", font=("Arial", 10))
+        filename_label.grid(row=3,column=1)
+
+        tk_filereset = tk.Button(root, text='Reset', background='#FFFFFF', width='20', fg='#000000', command=filereset2)
+        tk_filereset.grid(column = 1, row = 2)
+
+
+tk_file = tk.Button(root, text='Choose File', background='#FFFFFF', width='20', fg='#000000', command=setfile)
+tk_file.grid(column = 1, row = 2)
+
+tk_fileyt = tk.Button(root, text='YouTube URL', background='#FFFFFF', width='20', fg='#000000', command=setyt)
+tk_fileyt.grid(column = 1, row = 3)
+
+tk.PanedWindow(root, orient="horizontal", width=350, background="black", height=2).grid(row=4, columnspan=2, pady=10)
+tk.Label(root, text='Options', background="#f0f0f0", fg="black", font=("Arial", 14)).grid(row=5,columnspan=2)
+
+
+# TOGGLE START
+def setstart():
+    global args_output_file, args_input_file
+    args_output_file = tk_outputfile.get("1.0",'end-1c')
+    if args_input_file is None and args_url is None: messagebox.showerror("Error", "Please select an a File/URL to export.")
+    else: root.destroy()
+    #root.destroy()
+
+tk_start = tk.Button(root, text='Export', width=50, background='white', fg='#000000', command=setstart)
+tk_start.grid(columnspan = 2, row = 150)
+
+# OUTPUT FILE NAME
+
+tk.Label(root, text='Output Name   \n(Optional)', background="#f0f0f0", justify='left', fg="black", font=("Arial", 10)).grid(row=10,column=0)
+tk_outputfile = tk.Text(root, height=1, width=25)
+tk_outputfile.grid(row=10,column=1,pady='10')
+
+
+# SOUNDED SPEED
+def setsoundspeed(x):
+    global args_sounded_speed
+    args_sounded_speed = x
+tk_soundedspeed = tk.Scale(root,
+                orient     = "horizontal",
+                from_      = 0.0,       # MVC-Model-Part value-min-limit
+                width = 10,
+                to         =  10.0,       # MVC-Model-Part value-max-limit
+                length     = 210,         # MVC-Visual-Part layout geometry [px]
+                digits     =   3,         # MVC-Visual-Part presentation trick
+                resolution =   0.1,       # MVC-Controller-Part stepping
+                command = setsoundspeed,
+                )
+tk_soundedspeed.set(1)
+tk_soundedspeed.grid(row=11,column=1,padx='10')
+tk.Label(root, text='Sounded Speed', background="#f0f0f0", fg="black", font=("Arial", 10)).grid(row=11,column=0)
+
+# SILENT SPEED
+def setsilentspeed(x):
+    global args_silent_speed
+    args_silent_speed = x
+tk_silentspeed = tk.Scale(root,
+                orient     = "horizontal",
+                from_      = 0.0,       # MVC-Model-Part value-min-limit
+                width = 10,
+                to         =  10.0,       # MVC-Model-Part value-max-limit
+                length     = 210,         # MVC-Visual-Part layout geometry [px]
+                digits     =   3,         # MVC-Visual-Part presentation trick
+                resolution =   0.1,       # MVC-Controller-Part stepping
+                command = setsilentspeed,
+                ).grid(row=12,column=1,padx='10')
+tk.Label(root, text='Silent Speed    ', background="#f0f0f0", fg="black", font=("Arial", 10)).grid(row=12,column=0)
+
+tk.Label(root, text='*0 for instant', background="#f0f0f0", fg="black", font=("Arial", 8)).grid(row=13,column=0)
+
+
+
+tk.PanedWindow(root, orient="horizontal", width=350, background="black", height=2).grid(row=14, columnspan=2, pady=10)
+tk.Label(root, text='Advanced Options', background="#f0f0f0", fg="black", font=("Arial", 14)).grid(row=15,columnspan=2)
+
+# FRAME MARGIN
+def setframemargin(x):
+    global args_frame_margin
+    args_frame_margin = x
+tk_framemargin = tk.Scale(root,
+                orient     = "horizontal",
+                from_      = 0,       # MVC-Model-Part value-min-limit
+                width = 10,
+                to         =  10,       # MVC-Model-Part value-max-limit
+                length     = 210,         # MVC-Visual-Part layout geometry [px]
+                resolution =   1,       # MVC-Controller-Part stepping
+                command = setframemargin,
+                )
+tk_framemargin.set(2)
+tk_framemargin.grid(row=16,column=1,padx='10')
+tk.Label(root, text='Frame Margin   ', background="#f0f0f0", fg="black", font=("Arial", 10)).grid(row=16,column=0)
+
+# FRAME RATE
+def setframerate(x):
+    global args_frame_rate
+    args_frame_rate = x
+tk_framerate = tk.Scale(root,
+                orient     = "horizontal",
+                from_      = 1,       # MVC-Model-Part value-min-limit
+                width = 10,
+                to         =  90,       # MVC-Model-Part value-max-limit
+                length     = 210,         # MVC-Visual-Part layout geometry [px]
+                resolution =   1,       # MVC-Controller-Part stepping
+                command = setframerate,
+                )
+tk_framerate.set(30)
+tk_framerate.grid(row=17,column=1,padx='10')
+tk.Label(root, text='Frame Rate      ', background="#f0f0f0", fg="black", font=("Arial", 10)).grid(row=17,column=0)
+
+# FRAME QUALITY
+def setframequality(x):
+    global args_frame_quality
+    args_frame_quality = x
+tk_framequality = tk.Scale(root,
+                orient     = "horizontal",
+                from_      = 1,       # MVC-Model-Part value-min-limit
+                width = 10,
+                to         =  31,       # MVC-Model-Part value-max-limit
+                length     = 210,         # MVC-Visual-Part layout geometry [px]
+                resolution =   1,       # MVC-Controller-Part stepping
+                command = setframequality,
+                )
+tk_framequality.set(3)
+tk_framequality.grid(row=18,column=1,padx='10')
+tk.Label(root, text='Frame Quality   \n(1 = Best)   ', background="#f0f0f0", justify='left', fg="black", font=("Arial", 10)).grid(row=18,column=0)
+
+
+# SILENT THREASHOLD
+def setsilent_threashold(x):
+    global args_silent_threashold
+    args_silent_threashold = x
+tk_silent_threashold = tk.Scale(root,
+                orient     = "horizontal",
+                from_      = 0.01,       # MVC-Model-Part value-min-limit
+                width = 10,
+                to         =  1,       # MVC-Model-Part value-max-limit
+                length     = 210,         # MVC-Visual-Part layout geometry [px]
+                resolution =   0.01,       # MVC-Controller-Part stepping
+                command = setsilent_threashold,
+                )
+tk_silent_threashold.set(0.03)
+tk_silent_threashold.grid(row=19,column=1,padx='10')
+tk.Label(root, text='Silent Threashold', background="#f0f0f0", justify='left', fg="black", font=("Arial", 10)).grid(row=19,column=0)
+
+
+# SAMPLE RATE
+sample_rate_view = '44100hz'
+
+def toggle_samplerate():
+    global sample_rate_view
+    if sample_rate_view == '44100hz':
+        sample_rate_view = '48000hz'
+        args_sample_rate = 48000
+    elif sample_rate_view == '48000hz':
+        sample_rate_view = '44100hz'
+        args_sample_rate = 44100
+    tk_sample_rate.config(text=sample_rate_view)
+tk_sample_rate = tk.Button(root, text=sample_rate_view, width=28, background='#FFFFFF', fg='#000000', command=toggle_samplerate)
+tk_sample_rate.grid(row=20,column=1,pady='10')
+tk.Label(root, text='Sample Rate    ', background="#f0f0f0", justify='left', fg="black", font=("Arial", 10)).grid(row=20,column=0)
+
+tk.PanedWindow(root, orient="horizontal", width=300, background="#f0f0f0", height=2).grid(row=21, columnspan=2, pady=10)
+
+tk.Label(root, text='© Original by carykh  -  GUI by BatchSource', background="#f0f0f0", justify='left', fg="#787878", font=("Arial Bold", 10)).grid(row=200,columnspan=2)
+
+root.mainloop()
+
+if args_input_file is not None: args_input_file = str(args_input_file)
+if args_url is not None: args_url = str(args_url)
+if args_output_file is not None and args_output_file != '': args_output_file = str(args_output_file).replace(' ', '_')+'.mp4'
+
+args_silent_threashold = float(args_silent_threashold)
+
+args_sounded_speed = float(args_sounded_speed)
+if args_sounded_speed == 0.0: args_sounded_speed = float(999999)
+args_silent_speed = float(args_silent_speed)
+if args_silent_speed == 0.0: args_silent_speed = float(999999)
+
+
+args_frame_margin = int(args_frame_margin)
+args_sample_rate = int(args_sample_rate)
+args_frame_rate = int(args_frame_rate)
+args_frame_quality = int(args_frame_quality)
+
+
+###############
+
+root = tk.Tk()
+root.withdraw()
+
+if args_input_file is not None:
+    if ' ' in args_input_file:
+        messagebox.showerror("Error", "Process has ended because there is a \' \' character in the path, and that breaks this program. Please move the file to a folder without a SPACE character and try again.")
+        sys.exit(1)
+    else: messagebox.showinfo("Exporting...", "Your video is now processing. You can check the console for more details. Please click \"OK\" to begin exporting.")
+else: messagebox.showinfo("Exporting...", "Your video is now processing. You can check the console for more details. Please click \"OK\" to begin exporting.")
+
+frameRate = args_frame_rate
+SAMPLE_RATE = args_sample_rate
+SILENT_THRESHOLD = args_silent_threashold
+FRAME_SPREADAGE = args_frame_margin
+NEW_SPEED = [args_silent_speed, args_sounded_speed]
+if args_url != None:
+    INPUT_FILE = downloadFile(args_url)
 else:
-    INPUT_FILE = args.input_file
-URL = args.url
-FRAME_QUALITY = args.frame_quality
+    INPUT_FILE = args_input_file
+URL = args_url
+FRAME_QUALITY = args_frame_quality
 
 assert INPUT_FILE != None , "why u put no input file, that dum"
     
-if len(args.output_file) >= 1:
-    OUTPUT_FILE = args.output_file
+if len(args_output_file) >= 1:
+    OUTPUT_FILE = args_output_file
 else:
     OUTPUT_FILE = inputToOutputFilename(INPUT_FILE)
 
@@ -202,3 +483,4 @@ subprocess.call(command, shell=True)
 
 deletePath(TEMP_FOLDER)
 
+messagebox.showinfo("Complete", "The process is complete.")
