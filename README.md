@@ -16,7 +16,7 @@ temporary folder. If your video is long, this could take a LOT of space. I have 
 
 
 ## Pyinstaller
-Pyinstaller doesn't work when the script is creating temp files. Might try cxfreeze.
+Pyinstaller doesn't work when the script is creating temp files. Cxfreeze doesn't work with scipy. :/
 
 ## View the UI:
 
