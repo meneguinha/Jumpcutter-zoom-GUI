@@ -3,6 +3,7 @@ audiotsm
 scipy
 numpy
 pytube
+easygui
 tkinter (should be preinstalled on Windows)
 
 Command:
