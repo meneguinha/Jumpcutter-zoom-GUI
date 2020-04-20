@@ -12,8 +12,6 @@ import os
 import argparse
 from pytube import YouTube
 
-print('Minimize this console and navigate through the GUI.\n\nOnce you begin exporting, you can use this console to view the progress of the exporting.')
-
 def downloadFile(url):
     name = YouTube(url).streams.first().download()
     newname = name.replace(' ','_')
