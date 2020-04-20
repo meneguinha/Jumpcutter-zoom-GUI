@@ -16,8 +16,7 @@ temporary folder. If your video is long, this could take a LOT of space. I have 
 
 
 ## Pyinstaller
-
-A pyinstaller build is coming very soon.
+Pyinstaller doesn't work when the script is creating temp files. Might try cxfreeze.
 
 ## View the UI:
 
