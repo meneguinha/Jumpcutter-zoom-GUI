@@ -3,7 +3,7 @@ audiotsm
 scipy
 numpy
 pytube
-tkinter
+tkinter (should be preinstalled on Windows)
 
+Command:
 pip install Pillow audiotsm scipy numpy pytube3 easygui
-tkinter (should be preinstalled)
