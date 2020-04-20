@@ -64,7 +64,6 @@ def deletePath(s): # Dangerous! Watch out!
 
 
 import tkinter as tk
-import easygui as e
 from tkinter.filedialog import askopenfilename
 
 
