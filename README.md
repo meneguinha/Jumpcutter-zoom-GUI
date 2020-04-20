@@ -1,9 +1,7 @@
 # Jumpcutter Tkinter GUI
-Automatically edits videos. Original explanation by carykh here: https://www.youtube.com/watch?v=DQ8orIurGxw
 
-View the Tkinter Interface:
-
-![View the Interface](https://github.com/BatchSource/Jumpcutter-GUI/blob/master/example.gif)
+Carykh's jumpcutter but with a homemade tkinter interface.
+Automatically edits videos. Original explanation by carykh [here](https://www.youtube.com/watch?v=DQ8orIurGxw).
 
 
 ## Some heads-up:
@@ -20,3 +18,7 @@ temporary folder. If your video is long, this could take a LOT of space. I have 
 ## Pyinstaller
 
 A pyinstaller build is coming very soon.
+
+## View the UI:
+
+![View the Interface](https://github.com/BatchSource/Jumpcutter-GUI/blob/master/example.gif)
