@@ -1,7 +1,8 @@
 # Jumpcutter Tkinter GUI
 
 Carykh's jumpcutter but with a homemade tkinter interface.
-Automatically edits videos. Original explanation by carykh [here](https://www.youtube.com/watch?v=DQ8orIurGxw).
+
+Adjust the speeds of the sounded and silent parts of the video without manual editing. Original explanation by carykh [here](https://www.youtube.com/watch?v=DQ8orIurGxw).
 
 
 ### Some heads-up:
@@ -17,7 +18,7 @@ temporary folder. If your video is long, this could take a LOT of space. I have 
 You can download a zip file that includes ffmpeg [here](https://www.dropbox.com/s/5anbg3x9og3bz82/JumpcutterGUI.zip?dl=1).
 
 ### Pyinstaller
-Pyinstaller doesn't work when the script is creating temp files. Cxfreeze doesn't work with scipy. :/
+Pyinstaller doesn't work when the script is creating temp files. I tried cxfreeze, but doesn't work with scipy. :/
 
 ---
 
