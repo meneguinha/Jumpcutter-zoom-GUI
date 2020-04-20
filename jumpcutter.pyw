@@ -443,7 +443,7 @@ audioFrameCount = int(math.ceil(audioSampleCount/samplesPerFrame))
 
 hasLoudAudio = np.zeros((audioFrameCount))
 
-tkadddata(f'Looking for audio chucks louder than {args_silent_threashold}...')
+tkadddata(f'Looking for audio chucks louder than \"{args_silent_threashold}\"...')
 
 for i in range(audioFrameCount):
     start = int(i*samplesPerFrame)
