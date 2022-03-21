@@ -11,7 +11,7 @@ from shutil import copyfile, rmtree
 import os
 import argparse
 from pytube import YouTube
-import easygui as e
+import random
 
 def downloadFile(url):
     name = YouTube(url).streams.first().download()
@@ -52,6 +52,32 @@ def createPath(s):
         #messagebox.showerror("Error", "It looks like the program previously crashed. Try restarting the program and try again.")
         #sys.exit(1)
 
+def resize_frame(image_number):
+    path = os.path.dirname(__file__)
+    filename="frame{:06d}.jpg".format(image_number)
+    full_path_file = os.path.join(path,'TEMP',filename)
+    full_path_dir = os.path.join(path,'TEMP')
+    im = Image.open(full_path_file)
+    width, height = im.size
+    width = int(width)
+    height = int(height)
+    s_factor = 1.10
+    n_width = int(width*s_factor)
+    n_height = int(height*s_factor)
+    newimage=im.resize((n_width, n_height), Image.BICUBIC)
+    new_filename = "tempframe{:06d}.jpg".format(image_number)
+    newimage.save(os.path.join(full_path_dir,new_filename))
+    filename="tempframe{:06d}.jpg".format(image_number)
+    full_path_file = os.path.join(path,'TEMP',filename)
+    im = Image.open(full_path_file)
+    crop_left  = int((n_width - width)/2)
+    crop_top = int((n_height - height)/2)
+    crop_right = int((n_width-(n_width - width)/2))
+    crop_bot = int((n_height-(n_height - height)/2))
+    im = im.crop((crop_left,crop_top,crop_right,crop_bot))
+    new_filename = "frame{:06d}.jpg".format(image_number)
+    im.save(os.path.join(path,'TEMP',new_filename))
+
 def deletePath(s): # Dangerous! Watch out!
     try:  
         rmtree(s,ignore_errors=False)
@@ -70,8 +96,8 @@ root = tk.Tk()
 varAsTxt = tk.StringVar()
 os.system('title Jumpcutter Console - Do not close.')
 root.title('Jumpcutter GUI')
-root.maxsize(350,570)
-root.minsize(350,570)
+root.maxsize(350,620)
+root.minsize(350,620)
 root.resizable(False, False)
 root.attributes('-alpha', 0.9)
 
@@ -96,10 +122,11 @@ args_frame_margin = 2
 args_frame_rate = 30
 args_frame_quality = 3
 args_silent_threashold = 0.03
-args_sample_rate = 44100
+args_sample_rate = 48000
+args_zoom_chunks = 10 #Pecentage of Chunks to Zoom
 exportcolumn = 2
 
-def globalize(): global exportcolumn, args_sounded_speed, args_silent_speed, args_output_file, args_input_file, args_url, args_frame_margin, args_frame_rate, args_frame_quality, args_silent_threashold, args_sample_rate
+def globalize(): global exportcolumn, args_sounded_speed, args_silent_speed, args_output_file, args_input_file, args_url, args_frame_margin, args_frame_rate, args_frame_quality, args_silent_threashold, args_sample_rate, args_zoom_chunks
 globalize()
 
 
@@ -184,7 +211,7 @@ def setstart():
     #root.destroy()
 
 tk_start = tk.Button(root, text='Export', width=50, background='white', fg='#000000', command=setstart)
-tk_start.grid(columnspan = 2, row = 150)
+tk_start.grid(columnspan = 2, row = 26)
 
 # OUTPUT FILE NAME
 
@@ -304,6 +331,23 @@ tk_silent_threashold.set(0.03)
 tk_silent_threashold.grid(row=19,column=1,padx='10')
 tk.Label(root, text='Silent Threashold', background="#f0f0f0", justify='left', fg="black", font=("Arial", 10)).grid(row=19,column=0)
 
+# PERCENTAGE OF CHUNKS TO ZOOM
+def chunks_to_zoom(x):
+    global args_zoom_chunks
+    args_zoom_chunks = x
+tk_chunks_to_zoom = tk.Scale(root,
+                orient     = "horizontal",
+                from_      = 0,       # MVC-Model-Part value-min-limit
+                width = 10,
+                to         =  100,       # MVC-Model-Part value-max-limit
+                length     = 210,         # MVC-Visual-Part layout geometry [px]
+                resolution =   5,       # MVC-Controller-Part stepping
+                command = chunks_to_zoom,
+                )
+tk_chunks_to_zoom.set(10)
+tk_chunks_to_zoom.grid(row=20,column=1,padx='10')
+tk.Label(root, text='Chunks to Zoom', background="#f0f0f0", justify='left', fg="black", font=("Arial", 10)).grid(row=20,column=0)
+
 
 # SAMPLE RATE
 sample_rate_view = '44100hz'
@@ -318,12 +362,12 @@ def toggle_samplerate():
         args_sample_rate = 44100
     tk_sample_rate.config(text=sample_rate_view)
 tk_sample_rate = tk.Button(root, text=sample_rate_view, width=28, background='#FFFFFF', fg='#000000', command=toggle_samplerate)
-tk_sample_rate.grid(row=20,column=1,pady='10')
-tk.Label(root, text='Sample Rate    ', background="#f0f0f0", justify='left', fg="black", font=("Arial", 10)).grid(row=20,column=0)
+tk_sample_rate.grid(row=25,column=1,pady='10')
+tk.Label(root, text='Sample Rate    ', background="#f0f0f0", justify='left', fg="black", font=("Arial", 10)).grid(row=25,column=0)
 
-tk.PanedWindow(root, orient="horizontal", width=300, background="#f0f0f0", height=2).grid(row=21, columnspan=2, pady=10)
+tk.PanedWindow(root, orient="horizontal", width=300, background="#f0f0f0", height=2).grid(row=24, columnspan=2, pady=10)
 
-tk.Label(root, text='© Original by carykh  -  GUI by BatchSource', background="#f0f0f0", justify='left', fg="#787878", font=("Arial Bold", 10)).grid(row=200,columnspan=2)
+tk.Label(root, text='© Original by carykh  -  GUI by BatchSource', background="#f0f0f0", justify='left', fg="#787878", font=("Arial Bold", 10)).grid(row=27,columnspan=2)
 
 root.mainloop()
 
@@ -343,14 +387,15 @@ args_frame_margin = int(args_frame_margin)
 args_sample_rate = int(args_sample_rate)
 args_frame_rate = int(args_frame_rate)
 args_frame_quality = int(args_frame_quality)
+args_zoom_chunks = int(args_zoom_chunks)
 
 
 ###############
 
 root = tk.Tk()
 root.title('Jumpcutter GUI - Exporting...')
-root.maxsize(350,510)
-root.minsize(350,510)
+root.maxsize(350,620)
+root.minsize(350,620)
 root.resizable(False, False)
 root.attributes('-alpha', 0.9)
 root.config(background="#f0f0f0")
@@ -362,8 +407,8 @@ root.protocol("WM_DELETE_WINDOW", on_closing)
 tk.Label(root, text='Exporting...', background="#f0f0f0", fg="black", font=("Arial Bold...", 20)).pack()
 tk.Label(root, text='(Don\'t try to close out!)', background="#f0f0f0", fg="black", font=("Arial Bold", 10)).pack(side='top')
 
-tk.PanedWindow(root, orient="horizontal", width=300, background="#000000", height=2).pack(pady=10)
-tk.Label(root, text='© Original by carykh  -  GUI by BatchSource', background="#f0f0f0", justify='left', fg="#787878", font=("Arial Bold", 10)).pack(side='bottom')
+tk.PanedWindow(root, orient="horizontal", width=300, background="#000000", height=2).pack(pady=16)
+tk.Label(root, text='© Original by carykh  -  GUI by BatchSource', background="#f0f0f0", justify='left', fg="#787878", font=("Arial Bold", 12)).pack(side='bottom')
 
 
 def tkadddata(x):
@@ -469,6 +514,32 @@ chunks = chunks[1:]
 
 outputAudioData = np.zeros((0,audioData.shape[1]))
 outputPointer = 0
+
+tkadddata('Resizing frames...')
+
+###TO ZOOM SOMETIMES###
+auxv = len(chunks)
+zoom_chunks=[]
+for item in range(auxv):
+    new_array=chunks[item]
+    #print ('new_array', new_array)
+    new_array_lenght = new_array[1] - new_array[0] #Frame lenght in chunk
+    #300 is the minimum of 150 frames to be considered to zoom a chunk
+    if (new_array[2] == 1.0) and (new_array_lenght > 150) :
+        zoom_chunks.append(new_array[0:2])
+
+len_zoom = len(zoom_chunks)
+n_zoom = len_zoom*(args_zoom_chunks/100) #Only % of chunks with minimum lenght will be zoomed
+n_zoom = int(n_zoom)
+
+sampled_zoom_chunks = random.sample(zoom_chunks, n_zoom)
+
+for item in range(len(sampled_zoom_chunks)):
+    aux_array = sampled_zoom_chunks[item]
+    first_chunk_frame = aux_array[0]
+    last__chunk_frame = aux_array[1]
+    for i in range(first_chunk_frame, last__chunk_frame):
+        resize_frame(i)
 
 tkadddata('Altering audio and saving new time-altered frames...')
 
